@@ -48,7 +48,7 @@ func RespFail(w http.ResponseWriter, msg string) {
 	Resp(w, -1, nil, msg)
 }
 
-func RespOK(w http.ResponseWriter, code int, data interface{}, msg string) {
+func RespOK(w http.ResponseWriter, data interface{}, msg string) {
 	Resp(w, 0, data, msg)
 }
 func RespOKList(w http.ResponseWriter, data interface{}, total interface{}) {
