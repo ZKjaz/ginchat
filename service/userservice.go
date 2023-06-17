@@ -51,11 +51,11 @@ func CreatUser(c *gin.Context) {
 
 	salt := fmt.Sprintf("%06d", rand.Int31())
 	data := models.FindUserByName(user.Name)
-	if user.Name == "" || password == "" || repassword == "" {
+	if user.Name == "" || password == "" || repassword == "" || email == "" || phone == "" {
 
 		c.JSON(200, gin.H{
 			"code":    -1, // 0成功，-1失败
-			"message": "用户名或密码不能为空！！！",
+			"message": "用户名、密码、手机号或者邮箱不能为空！！！",
 			"data":    user,
 		})
 		return
