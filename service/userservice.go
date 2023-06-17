@@ -267,3 +267,15 @@ func SerchFriends(c *gin.Context) {
 	utils.RespOKList(c.Writer, users, len(users))
 
 }
+
+func AddFriend(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Request.FormValue("userId"))
+	targetId, _ := strconv.Atoi(c.Request.FormValue("targetId"))
+	code, msg := models.AddFriend(uint(id), uint(targetId))
+	if code == 0 {
+		utils.RespOK(c.Writer, code, msg)
+	} else {
+		utils.RespFail(c.Writer, msg)
+	}
+
+}
