@@ -75,6 +75,9 @@ func Publish(ctx context.Context, channl string, msg string) error {
 	var err error
 	fmt.Println("Publish.....", msg)
 	err = Red.Publish(ctx, channl, msg).Err()
+	if err != nil {
+		fmt.Println(err)
+	}
 	return err
 }
 

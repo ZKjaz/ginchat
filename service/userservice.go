@@ -39,7 +39,7 @@ func GetUserList(c *gin.Context) {
 // @param phone query string false "手机号"
 // @param email query string false "邮箱"
 // @Success 200 {string} json{"code","message"}
-// @Router /user/creatUser [get]
+// @Router /user/creatUser [POST]
 func CreatUser(c *gin.Context) {
 	user := models.UserBasic{}
 	user.Name = c.Request.FormValue("name")
@@ -103,7 +103,7 @@ func CreatUser(c *gin.Context) {
 	user.Email = email
 	user.Salt = salt
 	models.CreatUser(user)
-	c.JSON(-1, gin.H{
+	c.JSON(200, gin.H{
 		"code":    0, // 0成功，-1失败
 		"message": "新增用户成功！！！",
 		"data":    data,
@@ -236,10 +236,21 @@ func SendMsg(c *gin.Context) {
 	}(ws)
 	MsgHandler(ws, c)
 }
+
+func RedisMsg(c *gin.Context) {
+	userIdA, _ := strconv.Atoi(c.PostForm("userIdA"))
+	userIdB, _ := strconv.Atoi(c.PostForm("userIdB"))
+	start, _ := strconv.Atoi(c.PostForm("start"))
+	end, _ := strconv.Atoi(c.PostForm("end"))
+	isRev, _ := strconv.ParseBool(c.PostForm("isRev"))
+	res := models.RedisMsg(int64(userIdA), int64(userIdB), int64(start), int64(end), isRev)
+	utils.RespOKList(c.Writer, "ok", res)
+}
+
 func MsgHandler(ws *websocket.Conn, c *gin.Context) {
 	msg, err := utils.Subscribe(c, utils.PublishKey)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(" MsgHandler 发送失败", err)
 		return
 	}
 	tm := time.Now().Format("2006-01-02 15:04:05")
@@ -278,4 +289,59 @@ func AddFriend(c *gin.Context) {
 		utils.RespFail(c.Writer, msg)
 	}
 
+}
+
+// 创建群
+func CreateCommunity(c *gin.Context) {
+	ownerId, _ := strconv.Atoi(c.Request.FormValue("ownerId"))
+	name := c.Request.FormValue("name")
+	icon := c.Request.FormValue("icon")
+	desc := c.Request.FormValue("desc")
+	community := models.Community{}
+	community.OwnerId = uint(ownerId)
+	community.Name = name
+	community.Img = icon
+	community.Desc = desc
+
+	code, msg := models.CreateCommunity(community)
+	if code == 0 {
+		utils.RespOK(c.Writer, code, msg)
+	} else {
+		utils.RespFail(c.Writer, msg)
+	}
+}
+
+// 加载群列表
+func LoadCommunity(c *gin.Context) {
+	ownerId, _ := strconv.Atoi(c.Request.FormValue("ownerId"))
+
+	data, msg := models.LoadCommunity(uint(ownerId))
+
+	if len(data) != 0 {
+		utils.RespList(c.Writer, 0, data, msg)
+	} else {
+		utils.RespFail(c.Writer, msg)
+	}
+}
+
+// 加入群聊
+func JoinGroup(c *gin.Context) {
+	userId, _ := strconv.Atoi(c.Request.FormValue("userId"))
+	comId := c.Request.FormValue("comId")
+
+	code, msg := models.JoinGroup(uint(userId), comId)
+
+	if code == 0 {
+		utils.RespOK(c.Writer, code, msg)
+	} else {
+		utils.RespFail(c.Writer, msg)
+	}
+}
+
+func FindByID(c *gin.Context) {
+	userId, _ := strconv.Atoi(c.Request.FormValue("userId"))
+
+	//	name := c.Request.FormValue("name")
+	data := models.FindByID(uint(userId))
+	utils.RespOK(c.Writer, data, "ok")
 }

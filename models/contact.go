@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"main/utils"
 
 	"gorm.io/gorm"
@@ -20,12 +19,13 @@ func (table *Contact) TableName() string {
 	return "contact"
 }
 
+// 搜索好友关系
 func SerchFriend(userId uint) []UserBasic {
 	contacts := make([]Contact, 0)
 	objIds := make([]uint64, 0)
 	utils.DB.Where("owner_id = ? and type=1", userId).Find(&contacts)
 	for _, v := range contacts {
-		fmt.Println(">>>>>>>>>>>>>>", v)
+		//	fmt.Println(">>>>>>>>>>>>>>", v)
 		objIds = append(objIds, uint64(v.TargetId))
 	}
 	users := make([]UserBasic, 0)
@@ -33,17 +33,18 @@ func SerchFriend(userId uint) []UserBasic {
 	return users
 }
 
+// 添加好友   自己的ID  ， 好友的ID
 func AddFriend(userId uint, targetId uint) (int, string) {
-	user := UserBasic{}
+	//	user := UserBasic{}
 	if targetId != 0 {
-		user = FindByID(targetId)
-		if user.Name != "" {
-			if targetId == userId {
+		targetUser := FindByID(targetId)
+		if targetUser.Name != "" {
+			if targetUser.ID == userId {
 				return -1, "不能添加自己为好友！！！"
 			}
 
 			contact0 := Contact{}
-			utils.DB.Where("owner_id = ? and target_id = ? and type =1", userId, targetId).Find(&contact0)
+			utils.DB.Where("owner_id = ? and target_id = ? and type =1", userId, targetUser.ID).Find(&contact0)
 			if contact0.ID != 0 {
 				return -1, "该用户已经被添加！！！"
 			}
@@ -59,7 +60,7 @@ func AddFriend(userId uint, targetId uint) (int, string) {
 
 			contact := Contact{}
 			contact.OwnerId = userId
-			contact.TargetId = targetId
+			contact.TargetId = targetUser.ID
 			contact.Type = 1
 			if err := utils.DB.Create(&contact).Error; err != nil {
 				tx.Rollback()
@@ -79,5 +80,38 @@ func AddFriend(userId uint, targetId uint) (int, string) {
 		}
 
 	}
-	return -1, "好友ID不能为空！！！！"
+	return -1, "好友ID不能为空!!!!"
+}
+
+// 加入群组
+func JoinGroup(id uint, comId string) (int, string) {
+	contact := Contact{}
+	contact.OwnerId = id
+	contact.Type = 2
+
+	community := Community{}
+
+	utils.DB.Where("id = ? or name = ?", comId, comId).Find(&community)
+	if community.Name == "" {
+		return -1, "没有找到群组！！！"
+	}
+	utils.DB.Where("owner_id = ? and target_id = ? and type = 2", id, comId).Find(&contact)
+	if !contact.CreatedAt.IsZero() {
+		return -1, "已经加过此群！！！"
+	} else {
+		contact.TargetId = community.ID
+		utils.DB.Create(&contact)
+		return 0, "加群成功！！！"
+	}
+
+}
+
+func SearchUserByGroupId(communityId uint) []uint {
+	contacts := make([]Contact, 0)
+	objIds := make([]uint, 0)
+	utils.DB.Where("target_id = ? and type=2", communityId).Find(&contacts)
+	for _, v := range contacts {
+		objIds = append(objIds, uint(v.OwnerId))
+	}
+	return objIds
 }

@@ -20,7 +20,7 @@ func Router() *gin.Engine {
 
 	//静态资源
 	r.Static("/asset", "asset/")
-	//r.StaticFile("/favicon.ico", "asset/images/favicon.ico")
+	r.StaticFile("/favicon.ico", "asset/images/favicon.ico")
 
 	//	r.StaticFS()
 	r.LoadHTMLGlob("views/**/*")
@@ -39,12 +39,25 @@ func Router() *gin.Engine {
 	r.GET("/user/DeleteUser", service.DeleteUser)
 	r.POST("/user/UpdateUser", service.UpdateUser)
 	r.POST("/user/findUserByNameAndPwd", service.FindUserByNameAndPwd)
+	r.POST("/user/find", service.FindByID)
 
 	//发送消息
 	r.GET("/user/SendMsg", service.SendMsg)
+	//发送消息
 	r.GET("/user/SendUserMsg", service.SendUserMsg)
+	//上传
 	r.POST("/attach/upload", service.Upload)
+	//添加好友
 	r.POST("/contact/addfriend", service.AddFriend)
+	//创建群
+	r.POST("/contact/createCommunity", service.CreateCommunity)
+	//群列表
+	r.POST("/contact/loadcommunity", service.LoadCommunity)
+	//加入群聊
+
+	r.POST("/contact/joinGroup", service.JoinGroup)
+	r.POST("/user/redisMsg", service.RedisMsg)
+
 	return r
 
 }

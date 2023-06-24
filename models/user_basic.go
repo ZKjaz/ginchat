@@ -14,13 +14,14 @@ type UserBasic struct {
 	PassWord   string
 	Phone      string `valid:"matches(^1[3-9]{1}\\d{9}$)"`
 	Email      string `valid:"email"`
-	Identity   string //token
+	Avatar     string //头像
+	Identity   string
 	ClientIp   string
-	ClientProt string
+	ClientPort string
 	Salt       string
-	//	LoginTime     time.Time //后期更换 time.Time类型
-	//	HeartbeatTime time.Time
-	//	LoginOutTime  time.Time `gorm:"column:login_out_time" json:"login_out_time"`
+	//LoginTime     time.Time
+	//HeartbeatTime time.Time
+	//LoginOutTime time.Time `gorm:"column:login_out_time" json:"login_out_time"`
 	IsLogout   bool
 	DeviceInfo string
 }
