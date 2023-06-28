@@ -39,10 +39,17 @@ func InitMySQL() {
 			LogLevel:      logger.Info, //级别
 			Colorful:      true,        // 颜色
 		})
-
-	DB, _ = gorm.Open(mysql.Open(viper.GetString("mysql.dns")),
+	var err error
+	DB, err = gorm.Open(mysql.Open(viper.GetString("mysql.dns")),
 		&gorm.Config{Logger: newLogger})
-	fmt.Println("MySQL inited...")
+	if err != nil {
+		fmt.Println("init MySQL ....", err)
+		return
+	} else {
+
+		fmt.Println("MySQL inited...OK")
+	}
+
 	// user := models.UserBasic{}
 	// DB.Find(&user)
 	// fmt.Println(user)

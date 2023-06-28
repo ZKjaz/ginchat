@@ -1,0 +1,48 @@
+
+version: "3"
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:8088"
+    depends_on:
+      - db
+      - rd
+    links:
+      - "db"
+      - "rd"
+  
+
+
+  db: 
+    ports:
+      - "3306:3306"
+    image:  "mysql"
+    environment:
+      MYSQL_DARABASE: ginchat
+      MYSQL_ROOT_PASSWORD: 123456
+    volumes:
+      - ginchat-log:/var/log/mysql
+      - ginchat-data:/var/lib/mysql
+      - ginchat-conf:/etc/mysql/conf.d
+
+
+
+  rd: 
+    image:  "redis"
+    ports:
+        - "6379:6379"
+    volumes:
+      - ginchat-rdlog:/var/log/redis
+      - ginchat-rddata:/var/lib/redis
+      - ginchat-rdconf:/etc/redis/conf.d
+
+
+volumes:
+  ginchat-log:
+  ginchat-data:
+  ginchat-conf:
+  ginchat-rdlog:
+  ginchat-rddata:
+  ginchat-rdconf:

@@ -1,5 +1,6 @@
-FROM golang:1.20.5
+FROM golang:1.20
 WORKDIR /Dimage
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o /docker-ginchat
-CMD [ "/docker-ginchat" ]
+RUN CGO_ENABLED=0 GOOS=linux go build -o ginchat
+EXPOSE 5000
+CMD [ "./ginchat" ]
