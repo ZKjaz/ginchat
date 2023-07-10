@@ -23,7 +23,7 @@ import (
 type Message struct {
 	gorm.Model
 	UserId     int64  //发送者
-	TargetId   int64  //接受者
+	TargetId   int64  //接受者  群ID 或者目标用户ID
 	Type       int    //发送类型  1私聊  2群聊  3心跳
 	Media      int    //消息类型  1文字 2表情包 3语音 4图片 /表情包
 	Content    string //消息内容
@@ -40,6 +40,7 @@ func (table *Message) TableName() string {
 	return "message"
 }
 
+// 心跳信息
 type Node struct {
 	Conn          *websocket.Conn //连接
 	Addr          string          //客户端地址
@@ -227,7 +228,7 @@ func dispatch(data []byte) {
 	case 1:
 		//私信
 		fmt.Println("dispatch data:", string(data))
-		sendMsg(msg.TargetId, data)
+		sendMsg(msg.TargetId, data, 1)
 	case 2:
 		//群发
 		sendGroupMsg(msg.TargetId, data) //发送的群ID ，消息内容
@@ -239,7 +240,7 @@ func dispatch(data []byte) {
 	}
 }
 
-func sendMsg(userId int64, msg []byte) {
+func sendMsg(userId int64, msg []byte, t int) {
 	//	fmt.Println("sendMsg >>>>> userID: ", userId, "msg :", string(msg))
 	rwLocker.RLock()
 	node, ok := clientMap[userId]
@@ -265,12 +266,12 @@ func sendMsg(userId int64, msg []byte) {
 		}
 	}
 
-	//格式化redis消息记录格式，zrevrange msg_1_2 0 -1 withscores，查看id为1和2之间缓存的消息，序号由0开始到-1（全部消息）
+	//格式化redis消息记录格式，zrevrange msg_1_2_2 0 -1 withscores，查看id为1和2之间缓存的消息，序号由0开始到-1（全部消息）
 	var key string
 	if userId > jsonMsg.UserId {
-		key = "msg_" + userIdStr + "_" + targetIdStr
+		key = "msg_" + userIdStr + "_" + targetIdStr + "_" + strconv.Itoa(t)
 	} else {
-		key = "msg_" + targetIdStr + "_" + userIdStr
+		key = "msg_" + targetIdStr + "_" + userIdStr + "_" + strconv.Itoa(t)
 	}
 
 	res, err := utils.Red.ZRevRange(ctx, key, 0, -1).Result()
@@ -293,19 +294,21 @@ func (msg Message) MarshalBinary() ([]byte, error) {
 	return json.Marshal(msg)
 }
 
+// 传入目标群ID和msg信息
 func sendGroupMsg(targetId int64, msg []byte) {
 	fmt.Println("开始群发消息！！！")
 	userIds := SearchUserByGroupId(uint(targetId))
 	for i := 0; i < len(userIds); i++ {
-		//排除自己
-		if targetId != int64(userIds[i]) {
-			sendMsg(int64(userIds[i]), msg)
-		}
+		// //排除自己
+		// if targetId != int64(userIds[i]) {
+		// 	sendMsg(int64(userIds[i]), msg)
+		// }
+		sendMsg(int64(userIds[i]), msg, 2)
 	}
 }
 
 // 获取缓存里面的消息
-func RedisMsg(userIdA int64, userIdB int64, start int64, end int64, isRev bool) []string {
+func RedisMsg(userIdA int64, userIdB int64, start int64, end int64, t int, isRev bool) []string {
 	//rwLocker.RLock()
 	//node, ok := clientMap[userIdA]
 	//rwLocker.RUnlock()
@@ -316,9 +319,9 @@ func RedisMsg(userIdA int64, userIdB int64, start int64, end int64, isRev bool) 
 	targetIdStr := strconv.Itoa(int(userIdB))
 	var key string
 	if userIdA > userIdB {
-		key = "msg_" + targetIdStr + "_" + userIdStr
+		key = "msg_" + targetIdStr + "_" + userIdStr + "_" + strconv.Itoa(t)
 	} else {
-		key = "msg_" + userIdStr + "_" + targetIdStr
+		key = "msg_" + userIdStr + "_" + targetIdStr + "_" + strconv.Itoa(t)
 	}
 	//key = "msg_" + userIdStr + "_" + targetIdStr
 	//rels, err := utils.Red.ZRevRange(ctx, key, 0, 10).Result()  //根据score倒叙

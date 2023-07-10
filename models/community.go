@@ -7,12 +7,13 @@ import (
 	"gorm.io/gorm"
 )
 
+// 群表
 type Community struct {
 	gorm.Model
-	Name    string
-	OwnerId uint
-	Img     string
-	Desc    string
+	Name    string //群名称
+	OwnerId uint   //创建者的ID
+	Img     string //群头像
+	Desc    string //群备注
 }
 
 func CreateCommunity(community Community) (int, string) {

@@ -2,47 +2,48 @@
 version: "3"
 
 services:
-  web:
-    build: .
-    ports:
-      - "5000:8088"
-    depends_on:
-      - db
-      - rd
-    links:
-      - "db"
-      - "rd"
-  
-
-
-  db: 
+  mysql: 
     ports:
       - "3306:3306"
     image:  "mysql"
     environment:
       MYSQL_DARABASE: ginchat
       MYSQL_ROOT_PASSWORD: 123456
+    networks:
+      - local-db
     volumes:
-      - ginchat-log:/var/log/mysql
-      - ginchat-data:/var/lib/mysql
-      - ginchat-conf:/etc/mysql/conf.d
+      - /mysql-log:/var/log/mysql
+      - /mysql-data:/var/lib/mysql
+      - /mysql-conf:/etc/mysql/conf.d
+    command: --default-authentication-plugin=mysql_native_password #解决外部无法访间
 
-
-
-  rd: 
+  redis: 
     image:  "redis"
     ports:
         - "6379:6379"
+    networks:
+      - local-db
     volumes:
-      - ginchat-rdlog:/var/log/redis
-      - ginchat-rddata:/var/lib/redis
-      - ginchat-rdconf:/etc/redis/conf.d
+      - /redis-log:/var/log/redis
+      - /redis-data:/var/lib/redis
+      - /redis-conf:/etc/redis/redis.conf
+    command: redis-server /etc/redis/redis.conf
 
 
-volumes:
-  ginchat-log:
-  ginchat-data:
-  ginchat-conf:
-  ginchat-rdlog:
-  ginchat-rddata:
-  ginchat-rdconf:
+  etcd:
+    image: "bitnami/etcd"
+    ports:
+        - "2379:2379"
+        - "2380:2380"
+    networks: 
+      - local-db
+    environment:
+     ALLOW_NONE_AUTHENTICATION : yes
+     ETCD_ADVERTISE_CLIENT_URLS : "http://etcd:2379"
+    volumes:
+      - /etcd-log:/var/log/etcd
+      - /etcd-data:/var/lib/etcd
+      - /etcd-conf:/etc/etcd/etcd.conf
+
+networks:
+     local-db:

@@ -10,7 +10,7 @@ import (
 type Contact struct {
 	gorm.Model
 	OwnerId  uint //谁的关系信息
-	TargetId uint //对应的关系
+	TargetId uint //目标ID的关系 群ID或好友ID
 	Type     int  //对应的类型  1好友 2群组
 	Desc     string
 }

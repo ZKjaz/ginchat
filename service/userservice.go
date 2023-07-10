@@ -243,7 +243,8 @@ func RedisMsg(c *gin.Context) {
 	start, _ := strconv.Atoi(c.PostForm("start"))
 	end, _ := strconv.Atoi(c.PostForm("end"))
 	isRev, _ := strconv.ParseBool(c.PostForm("isRev"))
-	res := models.RedisMsg(int64(userIdA), int64(userIdB), int64(start), int64(end), isRev)
+	conmtype, _ := strconv.Atoi(c.PostForm("comtype"))
+	res := models.RedisMsg(int64(userIdA), int64(userIdB), int64(start), int64(end), 1, isRev)
 	utils.RespOKList(c.Writer, "ok", res)
 }
 

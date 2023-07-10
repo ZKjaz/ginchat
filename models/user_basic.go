@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// 用户信息表格
 type UserBasic struct {
 	gorm.Model
 	Name       string
